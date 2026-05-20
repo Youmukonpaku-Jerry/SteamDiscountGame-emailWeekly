@@ -181,8 +181,17 @@ def filter_deals(deals: Iterable[Deal], min_discount: int, min_reviews: int, lim
     return filtered[:limit]
 
 
-def render_email(deals: list[Deal], min_discount: int, min_reviews: int) -> tuple[str, str]:
-    subject = f"Steam weekly deals: {len(deals)} highly rated games"
+def review_summary(deal: Deal) -> str:
+    zh_label = REVIEW_LABELS[deal.review_label]
+    review_bits = [f"{zh_label} / {deal.review_label}"]
+    if deal.review_percent is not None:
+        review_bits.append(f"{deal.review_percent}% positive")
+    if deal.review_count is not None:
+        review_bits.append(f"{deal.review_count:,} reviews")
+    return ", ".join(review_bits)
+
+
+def render_text_email(deals: list[Deal], min_discount: int, min_reviews: int) -> str:
     lines = [
         "Steam weekly deals",
         "",
@@ -192,30 +201,212 @@ def render_email(deals: list[Deal], min_discount: int, min_reviews: int) -> tupl
 
     if not deals:
         lines.append("No matching deals found this week.")
+        return "\n".join(lines).strip() + "\n"
+
+    for index, deal in enumerate(deals, start=1):
+        lines.extend(
+            [
+                f"{index}. {deal.title}",
+                f"   Discount: -{deal.discount}%",
+                f"   Price: {deal.original_price or '?'} -> {deal.final_price or '?'}",
+                f"   Reviews: {review_summary(deal)}",
+                f"   Open on Steam: {deal.url}",
+                "",
+            ]
+        )
+
+    return "\n".join(lines).strip() + "\n"
+
+
+def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) -> str:
+    if not deals:
+        body = """
+          <div class="empty">
+            <h2>No matching deals found this week</h2>
+            <p>Try lowering the minimum discount or review-count filter.</p>
+          </div>
+        """
     else:
+        cards = []
         for index, deal in enumerate(deals, start=1):
-            zh_label = REVIEW_LABELS[deal.review_label]
-            review_bits = [f"{zh_label} / {deal.review_label}"]
-            if deal.review_percent is not None:
-                review_bits.append(f"{deal.review_percent}% positive")
-            if deal.review_count is not None:
-                review_bits.append(f"{deal.review_count:,} reviews")
-
-            lines.extend(
-                [
-                    f"{index}. {deal.title}",
-                    f"   Discount: -{deal.discount}%",
-                    f"   Price: {deal.original_price or '?'} -> {deal.final_price or '?'}",
-                    f"   Reviews: {', '.join(review_bits)}",
-                    f"   Link: {deal.url}",
-                    "",
-                ]
+            title = html.escape(deal.title)
+            url = html.escape(deal.url, quote=True)
+            original_price = html.escape(deal.original_price or "?")
+            final_price = html.escape(deal.final_price or "?")
+            reviews = html.escape(review_summary(deal))
+            cards.append(
+                f"""
+                <tr>
+                  <td class="rank">#{index}</td>
+                  <td class="content">
+                    <a class="title" href="{url}">{title}</a>
+                    <div class="deal-row">
+                      <span class="discount">-{deal.discount}%</span>
+                      <span class="price">{final_price}</span>
+                      <span class="original">{original_price}</span>
+                    </div>
+                    <div class="reviews">{reviews}</div>
+                  </td>
+                  <td class="action">
+                    <a class="button" href="{url}">View</a>
+                  </td>
+                </tr>
+                """
             )
+        body = f"""
+          <table class="deals" role="presentation" cellspacing="0" cellpadding="0">
+            {''.join(cards)}
+          </table>
+        """
 
-    return subject, "\n".join(lines).strip() + "\n"
+    return f"""\
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {{
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+        color: #111827;
+        font-family: Arial, Helvetica, sans-serif;
+      }}
+      .wrap {{
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 28px 16px;
+      }}
+      .header {{
+        background: #111827;
+        color: #ffffff;
+        padding: 24px;
+        border-radius: 8px 8px 0 0;
+      }}
+      h1 {{
+        margin: 0 0 8px;
+        font-size: 26px;
+        line-height: 1.2;
+      }}
+      .subtitle {{
+        margin: 0;
+        color: #d1d5db;
+        font-size: 14px;
+        line-height: 1.5;
+      }}
+      .deals {{
+        width: 100%;
+        background: #ffffff;
+        border-collapse: collapse;
+        border-radius: 0 0 8px 8px;
+        overflow: hidden;
+      }}
+      .deals tr {{
+        border-bottom: 1px solid #e5e7eb;
+      }}
+      .deals tr:last-child {{
+        border-bottom: 0;
+      }}
+      .rank {{
+        width: 52px;
+        padding: 20px 12px 20px 20px;
+        color: #6b7280;
+        font-weight: 700;
+        vertical-align: top;
+      }}
+      .content {{
+        padding: 18px 8px;
+        vertical-align: top;
+      }}
+      .title {{
+        color: #111827;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.25;
+        text-decoration: none;
+      }}
+      .deal-row {{
+        margin-top: 10px;
+      }}
+      .discount {{
+        display: inline-block;
+        background: #16a34a;
+        color: #ffffff;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 800;
+      }}
+      .price {{
+        display: inline-block;
+        margin-left: 10px;
+        color: #dc2626;
+        font-size: 22px;
+        font-weight: 900;
+      }}
+      .original {{
+        display: inline-block;
+        margin-left: 8px;
+        color: #6b7280;
+        font-size: 14px;
+        text-decoration: line-through;
+      }}
+      .reviews {{
+        margin-top: 9px;
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.4;
+      }}
+      .action {{
+        width: 82px;
+        padding: 20px 20px 20px 8px;
+        text-align: right;
+        vertical-align: top;
+      }}
+      .button {{
+        display: inline-block;
+        background: #2563eb;
+        color: #ffffff;
+        padding: 9px 14px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+      }}
+      .empty {{
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 0 0 8px 8px;
+      }}
+      .empty h2 {{
+        margin: 0 0 8px;
+        font-size: 20px;
+      }}
+      .empty p {{
+        margin: 0;
+        color: #4b5563;
+      }}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">
+        <h1>Steam Weekly Deals</h1>
+        <p class="subtitle">Discount >= {min_discount}% · Reviews >= {min_reviews} · Very Positive or Overwhelmingly Positive</p>
+      </div>
+      {body}
+    </div>
+  </body>
+</html>
+"""
 
 
-def send_email(subject: str, body: str) -> None:
+def render_email(deals: list[Deal], min_discount: int, min_reviews: int) -> tuple[str, str, str]:
+    subject = f"Steam weekly deals: {len(deals)} highly rated games"
+    return subject, render_text_email(deals, min_discount, min_reviews), render_html_email(deals, min_discount, min_reviews)
+
+
+def send_email(subject: str, text_body: str, html_body: str) -> None:
     smtp_host = env("SMTP_HOST", required=True)
     smtp_port = env_int("SMTP_PORT", 587)
     smtp_user = env("SMTP_USER", required=True)
@@ -227,7 +418,8 @@ def send_email(subject: str, body: str) -> None:
     message["Subject"] = subject
     message["From"] = mail_from
     message["To"] = mail_to
-    message.set_content(body)
+    message.set_content(text_body)
+    message.add_alternative(html_body, subtype="html")
 
     if smtp_port == 465:
         context = ssl.create_default_context()
@@ -253,14 +445,14 @@ def main() -> int:
 
     deals = fetch_steam_deals(max_pages, page_size, country_code, language)
     selected = filter_deals(deals, min_discount, min_reviews, limit)
-    subject, body = render_email(selected, min_discount, min_reviews)
+    subject, text_body, html_body = render_email(selected, min_discount, min_reviews)
 
     if dry_run:
         print(f"Subject: {subject}\n")
-        print(body)
+        print(text_body)
         return 0
 
-    send_email(subject, body)
+    send_email(subject, text_body, html_body)
     print(f"Sent {len(selected)} Steam deals.")
     return 0
 
