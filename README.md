@@ -5,6 +5,10 @@ This script emails a weekly list of discounted Steam games whose review label is
 
 It uses only Python's standard library.
 
+# How It Looks Like in Email
+
+
+
 ## Why I Made This
 
 I like playing games, but I am also lazy and do not want to check Steam sales all
