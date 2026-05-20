@@ -3,7 +3,7 @@ name: Steam weekly deals email
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * 1"
+    - cron: "*/5 * * * *"
 
 jobs:
   send-email:

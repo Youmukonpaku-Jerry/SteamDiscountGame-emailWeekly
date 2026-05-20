@@ -56,11 +56,12 @@ Example: send every Monday at 9:00 AM:
 0 9 * * 1 SMTP_HOST="smtp.gmail.com" SMTP_PORT="587" SMTP_USER="your_email@gmail.com" SMTP_PASSWORD="your_app_password" MAIL_TO="your_email@gmail.com" MAIL_FROM="your_email@gmail.com" /usr/bin/python3 /Users/jerryjiao/Documents/Codex/2026-05-18/give-the-actual-data-of-price/steam_weekly_deals_email.py
 ```
 
-## 5. Run Weekly With GitHub Actions
+## 5. Run With GitHub Actions
 
 The repository includes `.github/workflows/steam-deals.yml`. It runs every
-Monday at 13:00 UTC, which is 9:00 AM Eastern Time during daylight saving time,
-and can also be run manually from the GitHub Actions tab.
+5 minutes for testing, and can also be run manually from the GitHub Actions tab.
+After testing, change the cron value back to `0 13 * * 1` for a weekly Monday
+9:00 AM Eastern schedule during daylight saving time.
 
 Create these repository secrets in GitHub:
 
