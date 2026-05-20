@@ -310,6 +310,7 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
       }}
       h1 {{
         margin: 0 0 8px;
+        color: #008009;
         font-size: 32px;
         line-height: 1.12;
         letter-spacing: 0;
