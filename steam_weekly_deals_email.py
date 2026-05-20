@@ -104,7 +104,16 @@ def parse_price(row_html: str, class_name: str) -> str:
     return strip_tags(match.group(1)) if match else ""
 
 
-def parse_image_url(row_html: str) -> str:
+def parse_app_id(app_url: str) -> str:
+    match = re.search(r"/app/(\d+)/", app_url)
+    return match.group(1) if match else ""
+
+
+def parse_image_url(row_html: str, app_url: str) -> str:
+    app_id = parse_app_id(app_url)
+    if app_id:
+        return f"https://cdn.cloudflare.steamstatic.com/steam/apps/{app_id}/header.jpg"
+
     match = re.search(r'<img[^>]+src="([^"]+)"', row_html)
     return html.unescape(match.group(1)) if match else ""
 
@@ -130,12 +139,13 @@ def parse_deals(results_html: str) -> list[Deal]:
         if not title_match or not url_match:
             continue
 
+        clean_url = html.unescape(url_match.group(1)).split("?", 1)[0]
         review_label, review_percent, review_count = review
         deals.append(
             Deal(
                 title=strip_tags(title_match.group(1)),
-                url=html.unescape(url_match.group(1)).split("?", 1)[0],
-                image_url=parse_image_url(row),
+                url=clean_url,
+                image_url=parse_image_url(row, clean_url),
                 discount=int(discount_match.group(1)),
                 original_price=parse_price(row, "discount_original_price"),
                 final_price=parse_price(row, "discount_final_price"),
@@ -333,15 +343,15 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
         vertical-align: top;
       }}
       .cover {{
-        width: 120px;
-        padding: 20px 12px 20px 0;
+        width: 176px;
+        padding: 20px 16px 20px 0;
         vertical-align: top;
       }}
       .game-image {{
         display: block;
-        width: 120px;
-        height: 45px;
-        border-radius: 8px;
+        width: 176px;
+        height: 82px;
+        border-radius: 10px;
         object-fit: cover;
         background: #f5f5f7;
       }}
