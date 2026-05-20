@@ -6,8 +6,7 @@ This script emails a weekly list of discounted Steam games whose review label is
 It uses only Python's standard library.
 
 # How It Looks Like in Email
-
-
+<img width="753" height="561" alt="Screenshot 2026-05-19 at 11 51 20 PM" src="https://github.com/user-attachments/assets/54c52eee-1f9a-4a08-8291-e80176adbb6b" />
 
 ## Why I Made This
 
