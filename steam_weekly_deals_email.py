@@ -237,18 +237,18 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
             cards.append(
                 f"""
                 <tr>
-                  <td class="rank">#{index}</td>
+                  <td class="rank">{index}</td>
                   <td class="content">
                     <a class="title" href="{url}">{title}</a>
-                    <div class="deal-row">
-                      <span class="discount">-{deal.discount}%</span>
+                    <div class="price-row">
                       <span class="price">{final_price}</span>
                       <span class="original">{original_price}</span>
+                      <span class="discount">{deal.discount}% off</span>
                     </div>
                     <div class="reviews">{reviews}</div>
                   </td>
                   <td class="action">
-                    <a class="button" href="{url}">View</a>
+                    <a class="button" href="{url}">View on Steam</a>
                   </td>
                 </tr>
                 """
@@ -268,115 +268,119 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
       body {{
         margin: 0;
         padding: 0;
-        background: #f3f4f6;
-        color: #111827;
-        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       }}
       .wrap {{
-        max-width: 760px;
+        max-width: 780px;
         margin: 0 auto;
-        padding: 28px 16px;
+        padding: 32px 16px;
       }}
       .header {{
-        background: #111827;
-        color: #ffffff;
-        padding: 24px;
-        border-radius: 8px 8px 0 0;
+        background: #ffffff;
+        color: #1d1d1f;
+        padding: 28px 30px 22px;
+        border-radius: 22px 22px 0 0;
+        border-bottom: 1px solid #e8e8ed;
       }}
       h1 {{
         margin: 0 0 8px;
-        font-size: 26px;
-        line-height: 1.2;
+        font-size: 32px;
+        line-height: 1.12;
+        letter-spacing: 0;
+        font-weight: 700;
       }}
       .subtitle {{
         margin: 0;
-        color: #d1d5db;
-        font-size: 14px;
+        color: #6e6e73;
+        font-size: 15px;
         line-height: 1.5;
       }}
       .deals {{
         width: 100%;
         background: #ffffff;
         border-collapse: collapse;
-        border-radius: 0 0 8px 8px;
+        border-radius: 0 0 22px 22px;
         overflow: hidden;
       }}
       .deals tr {{
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e8e8ed;
       }}
       .deals tr:last-child {{
         border-bottom: 0;
       }}
       .rank {{
-        width: 52px;
-        padding: 20px 12px 20px 20px;
-        color: #6b7280;
-        font-weight: 700;
+        width: 44px;
+        padding: 22px 8px 22px 30px;
+        color: #86868b;
+        font-size: 15px;
+        font-weight: 600;
         vertical-align: top;
       }}
       .content {{
-        padding: 18px 8px;
+        padding: 20px 8px;
         vertical-align: top;
       }}
       .title {{
-        color: #111827;
-        font-size: 20px;
-        font-weight: 800;
+        color: #1d1d1f;
+        font-size: 21px;
+        font-weight: 650;
         line-height: 1.25;
         text-decoration: none;
       }}
-      .deal-row {{
-        margin-top: 10px;
-      }}
-      .discount {{
-        display: inline-block;
-        background: #16a34a;
-        color: #ffffff;
-        padding: 5px 9px;
-        border-radius: 6px;
-        font-size: 16px;
-        font-weight: 800;
+      .price-row {{
+        margin-top: 12px;
       }}
       .price {{
         display: inline-block;
-        margin-left: 10px;
-        color: #dc2626;
-        font-size: 22px;
-        font-weight: 900;
+        color: #1d1d1f;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 700;
       }}
       .original {{
         display: inline-block;
-        margin-left: 8px;
-        color: #6b7280;
-        font-size: 14px;
+        margin-left: 10px;
+        color: #86868b;
+        font-size: 15px;
         text-decoration: line-through;
       }}
+      .discount {{
+        display: inline-block;
+        margin-left: 10px;
+        color: #008009;
+        font-size: 15px;
+        font-weight: 600;
+      }}
       .reviews {{
-        margin-top: 9px;
-        color: #4b5563;
+        margin-top: 10px;
+        color: #6e6e73;
         font-size: 14px;
         line-height: 1.4;
       }}
       .action {{
-        width: 82px;
-        padding: 20px 20px 20px 8px;
+        width: 126px;
+        padding: 24px 30px 22px 8px;
         text-align: right;
         vertical-align: top;
       }}
       .button {{
         display: inline-block;
-        background: #2563eb;
-        color: #ffffff;
-        padding: 9px 14px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 700;
+        color: #0066cc;
+        background: #f5f5f7;
+        border: 1px solid #d2d2d7;
+        padding: 8px 13px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
         text-decoration: none;
+        white-space: nowrap;
       }}
       .empty {{
         background: #ffffff;
-        padding: 24px;
-        border-radius: 0 0 8px 8px;
+        padding: 28px 30px;
+        border-radius: 0 0 22px 22px;
       }}
       .empty h2 {{
         margin: 0 0 8px;
@@ -384,7 +388,7 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
       }}
       .empty p {{
         margin: 0;
-        color: #4b5563;
+        color: #6e6e73;
       }}
     </style>
   </head>
