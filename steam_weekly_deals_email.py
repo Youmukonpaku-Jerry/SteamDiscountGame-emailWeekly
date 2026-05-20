@@ -33,6 +33,7 @@ REVIEW_LABELS = {
 class Deal:
     title: str
     url: str
+    image_url: str
     discount: int
     final_price: str
     original_price: str
@@ -103,6 +104,11 @@ def parse_price(row_html: str, class_name: str) -> str:
     return strip_tags(match.group(1)) if match else ""
 
 
+def parse_image_url(row_html: str) -> str:
+    match = re.search(r'<img[^>]+src="([^"]+)"', row_html)
+    return html.unescape(match.group(1)) if match else ""
+
+
 def parse_deals(results_html: str) -> list[Deal]:
     rows = re.findall(
         r'(<a[^>]+class="[^"]*\bsearch_result_row\b[^"]*"[\s\S]*?</a>)',
@@ -129,6 +135,7 @@ def parse_deals(results_html: str) -> list[Deal]:
             Deal(
                 title=strip_tags(title_match.group(1)),
                 url=html.unescape(url_match.group(1)).split("?", 1)[0],
+                image_url=parse_image_url(row),
                 discount=int(discount_match.group(1)),
                 original_price=parse_price(row, "discount_original_price"),
                 final_price=parse_price(row, "discount_final_price"),
@@ -231,13 +238,20 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
         for index, deal in enumerate(deals, start=1):
             title = html.escape(deal.title)
             url = html.escape(deal.url, quote=True)
+            image_url = html.escape(deal.image_url, quote=True)
             original_price = html.escape(deal.original_price or "?")
             final_price = html.escape(deal.final_price or "?")
             reviews = html.escape(review_summary(deal))
+            image_cell = (
+                f'<a href="{url}"><img class="game-image" src="{image_url}" alt="{title}"></a>'
+                if image_url
+                else '<div class="game-image placeholder"></div>'
+            )
             cards.append(
                 f"""
                 <tr>
                   <td class="rank">{index}</td>
+                  <td class="cover">{image_cell}</td>
                   <td class="content">
                     <a class="title" href="{url}">{title}</a>
                     <div class="price-row">
@@ -317,6 +331,22 @@ def render_html_email(deals: list[Deal], min_discount: int, min_reviews: int) ->
         font-size: 15px;
         font-weight: 600;
         vertical-align: top;
+      }}
+      .cover {{
+        width: 120px;
+        padding: 20px 12px 20px 0;
+        vertical-align: top;
+      }}
+      .game-image {{
+        display: block;
+        width: 120px;
+        height: 45px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f5f5f7;
+      }}
+      .placeholder {{
+        border: 1px solid #e8e8ed;
       }}
       .content {{
         padding: 20px 8px;
